@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>2.策略模式</title>
+</head>
+<body>
+	定义一系列的算法，把它们一个个封装起来，并且使他们可以互相替换
+	<div id="div1">我是div</div>
+	<form id="registerForm">
+		<input type="text" name="userName" placeholder="用户名">
+		<input type="submit" value="提交">
+	</form>
+</body>
+<script type="text/javascript">
+
+
+	/* 最初计算工资的函数 */
+	var calculateBonus = function(level,salary){
+		if(level === 'S'){
+			return salary * 4
+		}
+		if(level === 'A'){
+			return salary * 3;
+		}
+		if(level === 'B' ){
+			return salary * 2;
+		}
+	}
+	calculateBonus('S',1000)
+	/*
+		缺点：1.calculateBonus函数太庞大
+			  2.calculateBonus缺乏弹性，想增加一个等级，需要深入函数内部
+			  3.复用性差，不能复用算法
+	 */
+
+
+	/*  使用了策略模式 */
+	var strategies = {
+		"S":function(salary){
+			return salary * 4
+		},
+		"A":function(salary){
+			return salary * 3
+		},
+		"B":function(salary){
+			return salary * 2
+		}
+	}
+
+	var calculateBonus = function(level,salary){
+		return strategies[level](salary);
+	}
+
+	console.log(calculateBonus('A',120));
+	console.log(calculateBonus('B',120));
+
+
+
+	/* 策略模式的表单验证 */
+	var strategies = {
+		isNonEmpty : function(value,errorMsg){
+			if(value ===""){
+				return errorMsg
+			}
+		},
+		minLength : function(value,length,errorMsg){
+			if(value.length < length){
+				return errorMsg
+			}
+		}
+	}
+
+	var Validator = function(){
+		this.cache = [];
+	}
+	Validator.prototype.add = function(dom,rules){
+		var self = this;
+		for (var i = 0,rule; rule = rules[i++];) {
+			(function(rule){
+				var strategyAry = rule.strategy.split(':');
+				var errorMsg = rule.errorMsg;
+
+				self.cache.push(function(){
+					var strategy = strategyAry.shift();
+					strategyAry.unshift(dom.value);
+					strategyAry.push(errorMsg);
+					return strategies[strategy].apply(dom,strategyAry);
+				})
+			})(rule)
+		}
+	}
+
+	Validator.prototype.start = function() {
+		for(var i = 0,validatorFunc;validatorFunc = this.cache[i++];){
+			var errorMsg = validatorFunc();
+			if (errorMsg) {
+				return errorMsg;
+			}
+		}
+	};
+
+
+	var registerForm = document.getElementById('registerForm');
+	var validataFunc = function(){
+		var validator = new Validator();
+		validator.add(registerForm.userName,[{
+			strategy:'isNonEmpty',
+			errorMsg:'用户名不能为空'
+		},
+		{
+			strategy:'minLength:16',
+			errorMsg:'用户名长度不能小于10位'
+		}
+		]);
+		var errorMsg = validator.start();
+		return errorMsg;
+	}
+
+	registerForm.onsubmit = function(){
+		var errorMsg = validataFunc();
+		if (errorMsg) {
+			alert(errorMsg);
+			return false;
+		}
+	}
+
+</script>
+</html>

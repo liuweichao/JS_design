@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>3.代理模式</title>
+</head>
+<body>
+代理的意义：不改变原来的函数的情况下，进行筛选
+</body>
+<script type="text/javascript">
+	/* 不用代理模式 */
+	var myImage = (function(){
+		var imgNode = document.createElement('img');
+		document.body.appendChild(imgNode);
+
+		return {
+			setSrc :function(src){
+				imgNode.src= src;
+			}
+		}
+	})();
+	myImage.setSrc('http://css88.b0.upaiyun.com/css88/2014/09/imooc.png');
+
+	/* 使用代理模式 */
+	var myImage = (function(){
+		var imgNode = document.createElement('img');
+		document.body.appendChild(imgNode);
+
+		return {
+			setSrc : function(src){
+				imgNode.src= src;
+			}
+		}
+	})();
+
+
+	var proxyImage = (function(){
+		var img = new Image;
+		img.onload = function(){
+			myImage.setSrc(this.src);
+		}
+		return {
+			setSrc : function(src){
+				myImage.setSrc('http://img.zcool.cn/community/01aec95540f1040000005b0375da37.jpg');
+				img.src = src;
+			}
+		}
+	})()
+
+	proxyImage.setSrc('http://css88.b0.upaiyun.com/css88/2014/09/imooc.png');
+
+
+	/* 没有缓存代理 */
+	var mult = function(){
+		console.log('开始计算乘积');
+		var a = 1;
+		for(var i = 0,l = arguments.length;i<1;i++){
+			a = a * arguments[i];
+		}
+		return a;
+	}
+
+	mult(1,2);
+	mult(5,2);
+
+	/* 缓存代理 */
+	var createProxyFactory = function(fn){
+		var cache = {};
+		return function(){
+			var args = Array.prototype.join.call(arguments,',');
+			if(args in cache){
+				return cache[args];
+			}
+			return cache[args] = fn.apply(this,arguments);
+		}
+	}
+	var proxyMult = createProxyFactory(mult);
+	proxyMult(1,2,3,4);
+	proxyMult(1,2,3,4);
+
+
+
+</script>
+</html>
